@@ -1,0 +1,6 @@
+[submodule "libraries/lua"]
+	path = libraries/lua
+	url = https://github.com/lua/lua
+[submodule "libraries/imgui"]
+	path = libraries/imgui
+	url = https://github.com/ocornut/imgui
