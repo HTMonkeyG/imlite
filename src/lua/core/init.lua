@@ -149,6 +149,9 @@ function core.quit(force)
   if force then
     delete_temp_files()
     os.exit()
+    -- embedding hosts may capture os.exit() instead of terminating the
+    -- process, so don't fall through to the code below
+    return
   end
   local dirty_count = 0
   local dirty_name
@@ -448,11 +451,21 @@ local run_threads = coroutine.wrap(function()
 end)
 
 
+-- advance the editor by a single frame; used by embedding hosts, which own
+-- the main loop. `force_redraw` makes it redraw even when nothing changed,
+-- which is required when the host rebuilds every frame (e.g. Dear ImGui)
+function core.tick(force_redraw)
+  core.frame_start = system.get_time()
+  if force_redraw then core.redraw = true end
+  local did_redraw = core.step()
+  run_threads()
+  return did_redraw
+end
+
+
 function core.run()
   while true do
-    core.frame_start = system.get_time()
-    local did_redraw = core.step()
-    run_threads()
+    local did_redraw = core.tick()
     if not did_redraw and not system.window_has_focus() then
       system.wait_event(0.25)
     end
